@@ -1,0 +1,7 @@
+#gTTs
+tensorflow
+tensorflow_io
+librosa
+tqdm
+seaborn
+tensorflow_hub
