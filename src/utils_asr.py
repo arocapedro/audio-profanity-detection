@@ -169,6 +169,27 @@ def plot_metrics(history):
 
     plt.legend()
 
+def plot_metrics_from_pd(history_pd):
+  history_pd.rename( columns={'Unnamed: 0':'epoch'}, inplace=True )
+  metrics = ['loss', 'prc', 'precision', 'recall']
+  plt.figure(figsize=(15,12))
+  for n, metric in enumerate(metrics):
+    name = metric.replace("_"," ").capitalize()
+    plt.subplot(2,2,n+1)
+    plt.plot(history_pd.epoch, history_pd[metric], color=colors[0], label='Train')
+    plt.plot(history_pd.epoch, history_pd['val_'+metric],
+             color=colors[1], linestyle="--", label='Val')
+    plt.xlabel('Epoch')
+    plt.ylabel(name)
+    if metric == 'loss':
+      plt.ylim([0, plt.ylim()[1]])
+    elif metric == 'auc':
+      plt.ylim([0.8,1])
+    else:
+      plt.ylim([0,1])
+
+    plt.legend()
+
 
 def inference(test_ds, classifier, threshold = 0.5):
   predictions = []

@@ -5,7 +5,7 @@ import tensorflow as tf
 from pathlib import Path
 
 from utils_asr import create_splits, load_wav_for_map,start_fit,get_class_weights,configure_for_performance
-from transfer_learn import create_model_small,extract_embedding_yamn
+from transfer_learn import create_model_small,extract_embedding_yamn,create_pretrained_efficientnet_model,convert_to_rgb
 from spectrograms import create_model_spectrograms,get_spectrogram_and_label_id
 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -32,12 +32,14 @@ def main(dataset_dir='../cursedataset-resampled', mode=None, batch_size=32, val_
       print('Input shape:', input_shape)
     classifier_model = create_model_small(input_shape)
 
-  # if mode == 'transfer_wav2vec':
-  #   main_ds = main_ds.map(extract_embedding_wav2vec, num_parallel_calls=AUTOTUNE)
-  #   for element, _ in main_ds.take(1):
-  #     input_shape = element.numpy().shape
-  #     print('Input shape:', input_shape)
-  #   classifier_model = create_model_small(input_shape)
+  if mode == 'transfer_effb0_step1':
+    main_ds = main_ds.map(get_spectrogram_and_label_id, num_parallel_calls=AUTOTUNE)
+    main_ds = main_ds.map(convert_to_rgb, num_parallel_calls=AUTOTUNE)
+    for element, _ in main_ds.take(1):
+      input_shape = element.numpy().shape
+      print('Input shape:', input_shape)
+      print("Input range", tf.math.reduce_min(element), tf.math.reduce_max(element))
+    classifier_model = create_pretrained_efficientnet_model(input_shape)
 
   elif mode == 'specs':
     main_ds = main_ds.map(get_spectrogram_and_label_id, num_parallel_calls=AUTOTUNE)
@@ -46,8 +48,8 @@ def main(dataset_dir='../cursedataset-resampled', mode=None, batch_size=32, val_
       print('Input shape:', input_shape)
     classifier_model = create_model_spectrograms(input_shape)
   else:
-    print("Unkown mode: ", mode)
-    return
+    print("Unknown mode: ", mode)
+    return None, None, None, None, None
 
 
   print(classifier_model.summary())
